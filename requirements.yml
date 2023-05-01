@@ -1,0 +1,10 @@
+name: program30
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pytorch
+  - torchaudio
+  - pytorch-cuda=11.7
+  - torchvision
+prefix: /home/r2q2/anaconda3/envs/program30
