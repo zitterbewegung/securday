@@ -25,7 +25,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.chat_models import ChatOpenAI
-
+from pwn import *
 app = Flask(__name__)
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -146,8 +146,8 @@ agent_chain = initialize_agent(
     tools,
     llm=ChatOpenAI(temperature=0.0),
     #llm=OpenAI(model='gpt-3.5-turbo', temperature=(0.0)),
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    #agent= AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    #agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    agent= AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     verbose=True,
     memory=memory,
     max_iterations=5,
