@@ -1,6 +1,6 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import os, time, yaml
+import os, time
 from collections import deque
 from typing import Dict, List, Optional, Any
 # from agent import BabyAG
@@ -12,7 +12,7 @@ from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
-from langchain.utilities import SerpAPIWrapper
+#from langchain.utilities import SerpAPIWrapper
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -31,7 +31,7 @@ memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
 python_repl = PythonREPLTool()
-search = SerpAPIWrapper()
+#search = SerpAPIWrapper()
 bash  = BashProcess()
 requests = TextRequestsWrapper()
 
@@ -103,11 +103,11 @@ tools = [
         func=wikipedia.run,
         description="use this when looking for historical or general questions.",
     ),
-    Tool(
-        name="Search",
-        func=search.run,
-        description="useful general questions but not shodan.",
-    ),
+#    Tool(
+#        name="Search",
+#        func=search.run,
+#        description="useful general questions but not shodan.",
+#    ),
     Tool(
         name="Bash",
         func=bash.run,
@@ -155,6 +155,9 @@ agent_chain = initialize_agent(
     max_execution_time=15,
     #max_iterations=1,
 )
+
+def query_agent(message: str, phone_number: str):
+    return agent_chain.run(input=inb_msg)
 
 def split_string(input_string, max_length=320):
     strings_list = []
