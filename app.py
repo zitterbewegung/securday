@@ -174,6 +174,7 @@ def chatgpt():
     inb_msg           = request.form["Body"]  # .lower()
     print(inb_msg)
 
+    redis_conn.publish("channel", json.dumps(data))
 
     response = agent_chain.run(input=inb_msg)
 
@@ -186,7 +187,9 @@ def chatgpt():
         resp.message(msg)
     print(response)
 
-    return str(resp)
+    data = {"message": inb_msg, "from": request.from, "to": 
+
+    return data #str(resp)
 
 
 if __name__ == "__main__":
