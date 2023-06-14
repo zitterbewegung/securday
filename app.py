@@ -1,6 +1,6 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import os, time
+import os, time, socket
 from collections import deque
 from typing import Dict, List, Optional, Any
 # from agent import BabyAG
@@ -25,8 +25,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.chat_models import ChatOpenAI
+import cve_searchsploit as CS
 
 app = Flask(__name__)
+
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
@@ -34,12 +36,19 @@ python_repl = PythonREPLTool()
 #search = SerpAPIWrapper()
 bash  = BashProcess()
 requests = TextRequestsWrapper()
+CS.update_db()
 
-#model_name = "databricks/dolly-v1-6b"
-#dolly_tokenizer = AutoTokenizer.from_pretrained(model_name)
-#dolly_model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+
+
+
 
 def subset_shodan(ip: str):
+    try:
+        socket.inet_aton(addr)
+        # legal
+    except socket.error:
+        #
+        return 'Invalid ip address'
     api = Shodan(os.environ.get('SHODAN_API_KEY'))
     host = api.host(ip)
     return """
