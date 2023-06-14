@@ -1,6 +1,6 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import os, time
+import os, time, socket, sys, ipaddress
 from collections import deque
 from typing import Dict, List, Optional, Any
 # from agent import BabyAG
@@ -25,8 +25,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.chat_models import ChatOpenAI
+import cve_searchsploit as CS
 
 app = Flask(__name__)
+
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
@@ -34,14 +36,24 @@ python_repl = PythonREPLTool()
 #search = SerpAPIWrapper()
 bash  = BashProcess()
 requests = TextRequestsWrapper()
+CS.update_db()
+exploit_db = CS.update_db()                                                                     
+                                                                                                
+def query_exploits(CVE : str) -> str:
+    pass
 
-#model_name = "databricks/dolly-v1-6b"
-#dolly_tokenizer = AutoTokenizer.from_pretrained(model_name)
-#dolly_model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
+def subset_shodan(addr: str):
+    
+    try:
+        ip = ipaddress.ip_address(addr)
+    except ValueError:
+        return 'Invalid ip address'
+    try:
+        api = Shodan(os.environ.get('SHODAN_API_KEY'))
+        host = api.host(addr)
+    except Exception as e:
+       return "Shodan has no info"
 
-def subset_shodan(ip: str):
-    api = Shodan(os.environ.get('SHODAN_API_KEY'))
-    host = api.host(ip)
     return """
     IP: {}
     Organization: {}
@@ -49,13 +61,15 @@ def subset_shodan(ip: str):
     Location: Lat {} Long {}
     Asn: {}
     Transport: {}
+    Port: {}
     """.format(host['ip_str'],
                host.get('org', 'n/a'),
                host.get('os', 'n/a'),
                host.get('lat', 'n/a'),
                host.get('long', 'n/a'),
                host.get('asn', 'n/a'),
-               host.get('transport', 'n/a'))
+               host.get('transport', 'n/a'),
+               host.get('port', 'n/a'),)
 
 def dolly_run(message):
 
@@ -111,15 +125,15 @@ tools = [
 #template = """Question: {question} Answers think step by step."""
 #prompt = PromptTemplate(template=template, input_variables=["question"])
 
-#prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
 
-prefix = """
-You are tasked with having a conversation with an AI that is talkative and knowledgeable about a target system, organization, and domain. The AI is capable of writing and executing code, but will truthfully say if it does not know the answer to a question. During the conversation, you will have access to the following tools to aid your communication: a whiteboard, a chat interface, and the ability to share files or snippets of code.
+# prefix = """
+# You are tasked with having a conversation with an AI that explains and is knowledgeable about a target system, organization, and domain. The AI is capable of figuring out information given an ip address, a hostname, running shell commands and scripts, and writing and executing code, but will truthfully say if it does not know what code to write and if it doesn't know the answer to the question. During the conversation, you will have access to the following tools to aid your communication: a whiteboard, a chat interface, and the ability to share files or snippets of code.
 
-Your goal is to engage the AI in a productive conversation that explores relevant topics related to the target system, organization, and domain. You should aim to ask questions that lead to deeper insights about the topic, provide follow-up questions to clarify any misunderstandings, and summarize key points using the whiteboard or chat interface. You can also use the ability to share files or code to provide examples or demonstrate concepts.
+# Your goal is to engage the tools you have in a productive conversation that explores relevant topics related to the target system, organization, and domain. You should aim to ask questions that lead to deeper insights about the topic, provide follow-up questions to clarify any misunderstandings, and summarize key points using the whiteboard or chat interface. You can also use the ability to share files or code to provide examples or demonstrate concepts.
 
-Please note that the clarity and quality of your questions will greatly affect the productivity of the conversation. You should strive to ask specific and open-ended questions that prompt thoughtful responses from the AI. Additionally, you should be prepared to handle any surprises or unexpected responses from the AI and adjust your approach accordingly.
-"""
+# Please note that the clarity and quality of your questions will greatly affect the productivity of the conversation. You should strive to ask specific and open-ended questions that prompt thoughtful responses from the AI. Additionally, you should be prepared to handle any surprises or unexpected responses from the AI and adjust your approach accordingly. You have access to the following tools:
+# """
 
 suffix = (
     "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {input}\n{agent_scratchpad}"
