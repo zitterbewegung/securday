@@ -39,10 +39,6 @@ requests = TextRequestsWrapper()
 #dolly_tokenizer = AutoTokenizer.from_pretrained(model_name)
 #dolly_model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
 
-#model_name = "PygmalionAI/pygmalion-2.7b"
-#tokenizer = AutoTokenizer.from_pretrained(model_name)
-#model = AutoModelForCausalLM.from_pretrained(model_name)
-
 def subset_shodan(ip: str):
     api = Shodan(os.environ.get('SHODAN_API_KEY'))
     host = api.host(ip)
@@ -61,16 +57,6 @@ def subset_shodan(ip: str):
                host.get('asn', 'n/a'),
                host.get('transport', 'n/a'))
 
-
- 
-def pygmalion_run(message):
-
-    inputs  = tokenizer(message, return_tensors="pt")
-    result  = model.generate(**inputs)
-    content =  tokenizer.decode(result[0])
-    content = content.replace("\\r\\n", "")
-    return content
-
 def dolly_run(message):
 
     inputs = tokenizer(message, return_tensors="pt")
@@ -80,9 +66,6 @@ def dolly_run(message):
 
 
 tools = [
-    Tool(name='pygmalion',
-         func=pygmalion_run,
-         description='useful when you are replying to romantic conversation.'),
     
     Tool(name='shodan', 
          func=subset_shodan,
@@ -128,7 +111,16 @@ tools = [
 #template = """Question: {question} Answers think step by step."""
 #prompt = PromptTemplate(template=template, input_variables=["question"])
 
-prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+#prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+
+prefix = """
+You are tasked with having a conversation with an AI that is talkative and knowledgeable about a target system, organization, and domain. The AI is capable of writing and executing code, but will truthfully say if it does not know the answer to a question. During the conversation, you will have access to the following tools to aid your communication: a whiteboard, a chat interface, and the ability to share files or snippets of code.
+
+Your goal is to engage the AI in a productive conversation that explores relevant topics related to the target system, organization, and domain. You should aim to ask questions that lead to deeper insights about the topic, provide follow-up questions to clarify any misunderstandings, and summarize key points using the whiteboard or chat interface. You can also use the ability to share files or code to provide examples or demonstrate concepts.
+
+Please note that the clarity and quality of your questions will greatly affect the productivity of the conversation. You should strive to ask specific and open-ended questions that prompt thoughtful responses from the AI. Additionally, you should be prepared to handle any surprises or unexpected responses from the AI and adjust your approach accordingly.
+"""
+
 suffix = (
     "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {input}\n{agent_scratchpad}"
     ""
@@ -144,8 +136,8 @@ memory = ConversationBufferMemory(
 
 agent_chain = initialize_agent(
     tools,
-    llm=ChatOpenAI(temperature=0.0),
-    #llm=OpenAI(model='gpt-3.5-turbo', temperature=(0.0)),
+    #llm=ChatOpenAI(temperature=0.0),
+    llm=OpenAI(temperature=(0.0)),
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     #agent= AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     verbose=True,
@@ -174,7 +166,6 @@ def chatgpt():
     inb_msg           = request.form["Body"]  # .lower()
     print(inb_msg)
 
-    redis_conn.publish("channel", json.dumps(data))
 
     response = agent_chain.run(input=inb_msg)
 
@@ -187,11 +178,8 @@ def chatgpt():
         resp.message(msg)
     print(response)
 
-    data = {"message": inb_msg, "from": request.from, "to": 
-
-    return data #str(resp)
+    return str(resp)
 
 
 if __name__ == "__main__":
-    
     app.run(debug=True)
