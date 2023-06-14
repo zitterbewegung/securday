@@ -1,6 +1,6 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import os, time, yaml
+import os, time
 from collections import deque
 from typing import Dict, List, Optional, Any
 # from agent import BabyAG
@@ -12,7 +12,7 @@ from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
-from langchain.utilities import SerpAPIWrapper
+#from langchain.utilities import SerpAPIWrapper
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -25,23 +25,19 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.chat_models import ChatOpenAI
-from pwn import *
+
 app = Flask(__name__)
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
 python_repl = PythonREPLTool()
-search = SerpAPIWrapper()
+#search = SerpAPIWrapper()
 bash  = BashProcess()
 requests = TextRequestsWrapper()
 
 #model_name = "databricks/dolly-v1-6b"
 #dolly_tokenizer = AutoTokenizer.from_pretrained(model_name)
 #dolly_model = AutoModelForCausalLM.from_pretrained(model_name).to("cuda")
-
-#model_name = "PygmalionAI/pygmalion-2.7b"
-#tokenizer = AutoTokenizer.from_pretrained(model_name)
-#model = AutoModelForCausalLM.from_pretrained(model_name)
 
 def subset_shodan(ip: str):
     api = Shodan(os.environ.get('SHODAN_API_KEY'))
@@ -61,16 +57,6 @@ def subset_shodan(ip: str):
                host.get('asn', 'n/a'),
                host.get('transport', 'n/a'))
 
-
- 
-def pygmalion_run(message):
-
-    inputs  = tokenizer(message, return_tensors="pt")
-    result  = model.generate(**inputs)
-    content =  tokenizer.decode(result[0])
-    content = content.replace("\\r\\n", "")
-    return content
-
 def dolly_run(message):
 
     inputs = tokenizer(message, return_tensors="pt")
@@ -80,9 +66,6 @@ def dolly_run(message):
 
 
 tools = [
-    Tool(name='pygmalion',
-         func=pygmalion_run,
-         description='useful when you are replying to romantic conversation.'),
     
     Tool(name='shodan', 
          func=subset_shodan,
@@ -103,11 +86,11 @@ tools = [
         func=wikipedia.run,
         description="use this when looking for historical or general questions.",
     ),
-    Tool(
-        name="Search",
-        func=search.run,
-        description="useful general questions but not shodan.",
-    ),
+#    Tool(
+#        name="Search",
+#        func=search.run,
+#        description="useful general questions but not shodan.",
+#    ),
     Tool(
         name="Bash",
         func=bash.run,
@@ -128,7 +111,16 @@ tools = [
 #template = """Question: {question} Answers think step by step."""
 #prompt = PromptTemplate(template=template, input_variables=["question"])
 
-prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+#prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. The AI can write code and execute it. If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+
+prefix = """
+You are tasked with having a conversation with an AI that is talkative and knowledgeable about a target system, organization, and domain. The AI is capable of writing and executing code, but will truthfully say if it does not know the answer to a question. During the conversation, you will have access to the following tools to aid your communication: a whiteboard, a chat interface, and the ability to share files or snippets of code.
+
+Your goal is to engage the AI in a productive conversation that explores relevant topics related to the target system, organization, and domain. You should aim to ask questions that lead to deeper insights about the topic, provide follow-up questions to clarify any misunderstandings, and summarize key points using the whiteboard or chat interface. You can also use the ability to share files or code to provide examples or demonstrate concepts.
+
+Please note that the clarity and quality of your questions will greatly affect the productivity of the conversation. You should strive to ask specific and open-ended questions that prompt thoughtful responses from the AI. Additionally, you should be prepared to handle any surprises or unexpected responses from the AI and adjust your approach accordingly.
+"""
+
 suffix = (
     "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {input}\n{agent_scratchpad}"
     ""
@@ -144,10 +136,10 @@ memory = ConversationBufferMemory(
 
 agent_chain = initialize_agent(
     tools,
-    llm=ChatOpenAI(temperature=0.0),
-    #llm=OpenAI(model='gpt-3.5-turbo', temperature=(0.0)),
-    #agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    agent= AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    #llm=ChatOpenAI(temperature=0.0),
+    llm=OpenAI(temperature=(0.0)),
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    #agent= AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     verbose=True,
     memory=memory,
     max_iterations=5,
@@ -155,6 +147,9 @@ agent_chain = initialize_agent(
     max_execution_time=15,
     #max_iterations=1,
 )
+
+def query_agent(message: str, phone_number: str):
+    return agent_chain.run(input=inb_msg)
 
 def split_string(input_string, max_length=320):
     strings_list = []
@@ -187,5 +182,4 @@ def chatgpt():
 
 
 if __name__ == "__main__":
-    
     app.run(debug=True)
