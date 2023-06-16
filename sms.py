@@ -26,8 +26,8 @@ def handle_received_sms(message, to_phone_number, from_phone_number):
 def send_sms(message, to_phone_number, from_phone_number):
     from twilio.rest import Client
     # Replace with your Twilio account details
-    account_sid = 'AC5bcff59dbca312a39f93ff9998a03f63'
-    auth_token = 'ac33a22d951b391f41d82479e65fd999'
+    account_sid = os.environ['TWILIO_ACCOUNT_SID'] 
+    auth_token = os.environ['TWILIO_AUTH_TOKEN']
     
     client = Client(account_sid, auth_token)
     #resp = ""
