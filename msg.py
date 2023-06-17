@@ -12,5 +12,5 @@ client = Client()
 
 def send_text_message(from_, to, body):
     result = query_agent(message)
-    client.messages.create(from_=from_, to=to, body=processed)
+    client.messages.create(from_=from_, to=to, body=result)
 
