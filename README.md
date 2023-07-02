@@ -1,4 +1,4 @@
-# Project Title
+# Saturday
 
 An SMS autonomous agent that assists in information security tasks.
 
@@ -11,17 +11,22 @@ An SMS autonomous agent that assists in information security tasks. Under the ho
 
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* Python 3.10
+* A twilio acccount
+* ngrok / static IP address
 
 ### Installing
 
-* How/where to download your program
-* Any modifications needed to be made to files/folders
+* After installing Python create a virtualenv
+* pip install -r requirements.txt
+* Run python app.py for the main app
+* Miniagi change .env.example and put the relevant credentials.
+* Run recieve.py to start a messsage queue for simple tasks
+* Run miniagi/pentest.py for the message queue consumer for pentesting.
 
 ### Executing program
 
-* How to run the program
+* Send your SMS texts to the Twilio Phone Number you have bought.
 * Step-by-step bullets
 ```
 code blocks for commands
