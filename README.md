@@ -13,6 +13,7 @@ An SMS autonomous agent that assists in information security tasks. Under the ho
 
 * Python 3.10
 * A twilio acccount
+* An OpenAI account
 * ngrok / static IP address
 
 ### Installing
