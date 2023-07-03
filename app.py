@@ -17,7 +17,7 @@ def split_string(input_string, max_length=320):
     input_string_length = len(input_string)
 
     for i in range(0, input_string_length, max_length):
-        strings_list.append(input_string[i:i + max_length])
+        strings_list.append(input_string[i : i + max_length])
 
     return strings_list
 
@@ -62,7 +62,6 @@ def chatgpt():
     # Start our TwiML response
     # time.sleep(2)
     resp = MessagingResponse()
-    
     return str(resp)
 
 

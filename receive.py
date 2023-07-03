@@ -22,6 +22,9 @@ def main():
                           durable=True)
 
     def send_text_message(from_, to, body):
+        '''
+        Performs inference and then sends the text message.
+        '''
         result = agent_chain.run(input=body)
         client.messages.create(from_=from_, to=to, body=result)
 
