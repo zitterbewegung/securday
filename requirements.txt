@@ -93,7 +93,7 @@ torch==2.0.0
 torchaudio==2.0.0
 torchvision==0.15.0
 tqdm==4.65.0
-transformers==4.27.4
+transformers==4.30.0
 triton==2.0.0
 twilio==8.0.0
 typing-inspect==0.8.0
