@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import pika, sys, os, logging
+import pika, sys, os, logging, re
 from dotenv import load_dotenv
 import json
 import requests
