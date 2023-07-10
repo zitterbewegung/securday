@@ -1,11 +1,9 @@
-from flask import Flask, request
-from twilio.twiml.messaging_response import MessagingResponse
-from inference import query_agent
-import json
-import pika
-import os, time, socket, sys, ipaddress, logging
-from collections import deque
+import os, time, socket, sys, ipaddress, logging, json
 from typing import Dict, List, Optional, Any
+from collections import deque
+from flask import Flask, request
+import pika
+from twilio.twiml.messaging_response import MessagingResponse
 
 # All Context / API managers
 app = Flask(__name__)
@@ -49,12 +47,12 @@ def chatgpt():
     inbound_request["To"]      = to_phone_number
     inbound_request["From"]    = from_phone_number 
 
-    if inbound_request in ['pentest', 'Pentest', 'analyze security']:
-        pass
-    else:    
-        inbound_request_payload = str(json.dumps(inbound_request))
-        logging.info("Inbound Request Payload {}".format(inbound_request_payload))
-        send_to_queue(inbound_request_payload)
+    #if inbound_request in ['pentest', 'Pentest', 'analyze security']:
+    #    pass
+    #else:    
+    inbound_request_payload = str(json.dumps(inbound_request))
+    logging.info("Inbound Request Payload {}".format(inbound_request_payload))
+    send_to_queue(inbound_request_payload)
     
     logging.info("Inb_msg {}".format(inb_msg))
     logging.info("Req To phone number {}".format(to_phone_number))
