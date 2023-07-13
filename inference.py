@@ -4,14 +4,14 @@ from shodan import Shodan
 # import pwnlib
 from langchain.chat_models import ChatOpenAI
 #import cve_searchsploit as CS
-from langchain import Wikipedia, OpenAI, 
+from langchain import Wikipedia, OpenAI 
 from langchain.llms import PromptLayerOpenAI
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
 from langchain.agents import Tool, AgentType
 from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
-from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
+#from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -126,9 +126,9 @@ llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613")
 def _handle_error(error) -> str:
     return str(error)[:50]
     
-model    = ChatOpenAI(temperature=0)
-planner  = load_chat_planner(model)
-executor = load_agent_executor(model, tools, verbose=True)
+#model    = ChatOpenAI(temperature=0)
+#planner  = load_chat_planner(model)
+#executor = load_agent_executor(model, tools, verbose=True)
 
 
 agent_chain = initialize_agent(
