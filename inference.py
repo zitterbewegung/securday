@@ -143,5 +143,12 @@ agent_chain = initialize_agent(
 # SMS messaging tools and endpoint
 
 
-def query_agent(inb_msg: str):
-    return str(agent_chain.run(input=inb_msg))
+def query_agent(query_str: str):
+    try:
+        response = agent_chain.run(input=query_str)
+    except ValueError as e:
+        response = str(e)
+        if not response.startswith("Could not parse LLM output: `"):
+            raise e
+        response = response.removeprefix("Could not parse LLM output: `").removesuffix("`")
+    return str(agent_chain.run(input=query_str))
