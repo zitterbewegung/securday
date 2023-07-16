@@ -47,9 +47,6 @@ def chatgpt():
     inbound_request["To"]      = to_phone_number
     inbound_request["From"]    = from_phone_number 
 
-    #if inbound_request in ['pentest', 'Pentest', 'analyze security']:
-    #    pass
-    #else:    
     inbound_request_payload = str(json.dumps(inbound_request))
     logging.info("Inbound Request Payload {}".format(inbound_request_payload))
     send_to_queue(inbound_request_payload)
@@ -58,10 +55,7 @@ def chatgpt():
     logging.info("Req To phone number {}".format(to_phone_number))
     logging.info("Req from phone number {}".format(from_phone_number))
   
-  
-    """Respond to incoming calls with a simple text message."""
-    # Start our TwiML response
-    # time.sleep(2)
+    #Relaying back to twilio
     resp = MessagingResponse()
     return str(resp)
 
