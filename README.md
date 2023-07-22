@@ -30,13 +30,23 @@ An SMS autonomous agent that assists in information security tasks. Under the ho
 * Send your SMS texts to the Twilio Phone Number you have bought.
 * If you are getting a 500 error check issues with the twilio console.
 
+First start app.py
 ```
-code blocks for commands
+python app.py
 ```
+Then start reciever.py
+
+Then start receiver.py (at minium you need one of these).
+```
+python receiver.py
+```
+
 
 ## Help
 
-Any advise for common problems or issues.
+If you aren't seeing SMSs flowing down to the flask server look at the twilio console. You probably don't have the phone number URL / IP correctly entered.
+
+Using ngrok for development or initial setup is recommended but not required. 
 ```
 command to run if program contains helper info
 ```
