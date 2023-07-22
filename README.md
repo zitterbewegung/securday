@@ -4,7 +4,7 @@ An SMS autonomous agent that assists in information security tasks.
 
 ## Description
 
-An SMS autonomous agent that assists in information security tasks. Under the hood it uses langchain (a way to augment LLMs) that currently uses an SMS / MMS / Phone interface (you send a text message and it will respond to your phone) that will allow for basic information retrieval tasks (google search, searching shodan, google places) and has the goal of doing complex offensive and defensive security tasks using anything from a dumb phone to a smartphone. It is preprogramed with tools that it can intelligently use to accomplish certain tasks such as performing a search on shodan given an IP address.
+Under the hood it uses langchain (a way to augment LLMs) that currently uses an SMS / MMS / Phone interface (you send a text message and it will respond to your phone) that will allow for basic information retrieval tasks (google search, searching shodan, google places) and has the goal of doing complex offensive and defensive security tasks using anything from a dumb phone to a smartphone. It is preprogramed with tools that it can intelligently use to accomplish certain tasks such as performing a search on shodan given an IP address.
 
 
 ## Getting Started
