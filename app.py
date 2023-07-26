@@ -1,14 +1,14 @@
 import os, time, socket, sys, ipaddress, logging, json
-from collections import deque
 from typing import Dict, List, Optional, Any
+from collections import deque
 from flask import Flask, request
-from twilio.twiml.messaging_response import MessagingResponse
-from inference import query_agent
 import pika
+from twilio.twiml.messaging_response import MessagingResponse
 
 # All Context / API managers
 app = Flask(__name__)
 
+logging.basicConfig(filename='app.log', encoding='utf-8', level=logging.DEBUG)
 
 # def get_if_opt_out(phone_number):
 #     with open('opt_out.csv', newline='') as csvfile:
@@ -40,30 +40,27 @@ def split_string(input_string, max_length=320):
 
     return strings_list
 
-
 def send_to_queue(inbound_request_payload):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
-    channel.queue_declare(queue="task_queue", durable=True)
+    channel.queue_declare(queue='task_queue',
+                          durable=True)
 
-    channel.basic_publish(
-        exchange="",
-        routing_key="task_queue",
-        body=inbound_request_payload,
-        properties=pika.BasicProperties(
-            delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE
-        ),
-    )
-    print(" [x] Sent {}".format(inbound_request_payload))
+    channel.basic_publish(exchange='',
+                          routing_key='task_queue',
+                          body=inbound_request_payload,
+                          properties=pika.BasicProperties(
+                              delivery_mode=pika.spec.PERSISTENT_DELIVERY_MODE))
+    logging.info(" [x] Sent {}".format(inbound_request_payload))
     connection.close()
-
 
 @app.route("/sms", methods=["POST"])
 def chatgpt():
     """get incoming message"""
-    inb_msg = request.form["Body"]  # .lower()
-    to_phone_number = request.form["To"]
+    inb_msg           = request.form["Body"]  # .lower()
+    to_phone_number   = request.form["To"]
     from_phone_number = request.form["From"]
     opt_out_filename = "opt_out.json"
 
@@ -92,12 +89,9 @@ def chatgpt():
     logging.info("Inb_msg {}".format(inb_msg))
     logging.info("Req To phone number {}".format(to_phone_number))
     logging.info("Req from phone number {}".format(from_phone_number))
-
-    """Respond to incoming calls with a simple text message."""
-    # Start our TwiML response
-    # time.sleep(2)
+  
+    #Relaying back to twilio
     resp = MessagingResponse()
-
     return str(resp)
 
 
