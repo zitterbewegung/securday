@@ -1,6 +1,7 @@
 import os, time, socket, sys, ipaddress, logging, json
 from typing import Dict, List, Optional, Any
 from collections import deque
+import persistent_dictionary
 from flask import Flask, request
 import pika
 from twilio.twiml.messaging_response import MessagingResponse
@@ -62,12 +63,8 @@ def chatgpt():
     inb_msg           = request.form["Body"]  # .lower()
     to_phone_number   = request.form["To"]
     from_phone_number = request.form["From"]
-    opt_out_filename = "opt_out.json"
+    opt_out_filename = "opt_out_phonenumbers.json"
 
-    opt_in = {}
-    with open(opt_out_filename) as json_file:
-        opt_in = json.load(json_file)
- 
     inbound_request = {}
     inbound_request["inb_msg"] = inb_msg
     inbound_request["To"] = to_phone_number
@@ -75,16 +72,23 @@ def chatgpt():
     
     inbound_request_payload = str(json.dumps(inbound_request))
 
-    if opt_in.get(from_phone_number): 
-       send_to_queue(inbound_request_payload)
-    else:
-        opt_in[from_phone_number] = True
-    
-    if "STOP" in inb_msg:
-        opt_in[from_phone_number] = False
 
-    with open('opt_out_data.json', 'w') as outfile:
-        json.dump(user, outfile)
+    with PersistentDict('opt_out.json', 'c', format='json') as opt_in:
+        opt_in = d
+        #with open(opt_out_filename) as json_file:
+        #    opt_in = json.load(json_file)
+ 
+
+        if opt_in.get(from_phone_number): 
+            send_to_queue(inbound_request_payload)
+        else:
+            opt_in[from_phone_number] = True
+    
+        if "STOP" in inb_msg:
+            opt_in[from_phone_number] = False
+
+    #with open('opt_out_data.json', 'w') as outfile:
+    #    json.dump(user, outfile)
 
     logging.info("Inb_msg {}".format(inb_msg))
     logging.info("Req To phone number {}".format(to_phone_number))
