@@ -74,7 +74,6 @@ def chatgpt():
 
 
     with PersistentDict('opt_out.json', 'c', format='json') as opt_in:
-        opt_in = d
         #with open(opt_out_filename) as json_file:
         #    opt_in = json.load(json_file)
  
