@@ -7,10 +7,8 @@ from inference import agent_chain
 from inference import query_agent
 from twilio.rest import Client
 load_dotenv()
-
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN= os.environ.get('TWILIO_AUTH_TOKEN')
 logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
+
 
 def main():
 

@@ -25,6 +25,7 @@ from langchain.utilities import (
     BashProcess,
     TextRequestsWrapper,
 )
+#from langchain.tools import ShellTool
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -93,11 +94,6 @@ tools = [
         description="use this when asked about writing code or if py in is the request.",
     ),
     Tool(
-        name="wikipedia",
-        func=wikipedia.run,
-        description="use this when looking for historical or general questions.",
-    ),
-    Tool(
         name="Bash",
         func=bash.run,
         description="use this to execute shell commands or git commits",
@@ -105,7 +101,7 @@ tools = [
 ]
 
 
-prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. The AI can write code and execute it.  If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. A user will give information about a hostname or an ip address.  The AI can write code and execute it.  If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
 
 
 suffix = (
@@ -129,7 +125,7 @@ def _handle_error(error) -> str:
 #model    = ChatOpenAI(temperature=0)
 #planner  = load_chat_planner(model)
 #executor = load_agent_executor(model, tools, verbose=True)
-
+#agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
     tools,
@@ -146,9 +142,11 @@ agent_chain = initialize_agent(
 def query_agent(query_str: str):
     try:
         response = agent_chain.run(input=query_str)
+        
     except ValueError as e:
         response = str(e)
         if not response.startswith("Could not parse LLM output: `"):
             raise e
         response = response.removeprefix("Could not parse LLM output: `").removesuffix("`")
-    return str(agent_chain.run(input=query_str))
+    return str(response)
+

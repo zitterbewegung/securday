@@ -1,36 +1,26 @@
 import os, time, socket, sys, ipaddress, logging, json
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, LiteralString
 from collections import deque
-import persistent_dictionary
+from persistent_dictionary import PersistentDict 
 from flask import Flask, request
 import pika
 from twilio.twiml.messaging_response import MessagingResponse
+from twilio.rest import Client
+from dotenv import load_dotenv
+load_dotenv()
+
+
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN= os.environ.get('TWILIO_AUTH_TOKEN')
+
 
 # All Context / API managers
 app = Flask(__name__)
+client = Client()
+
 
 logging.basicConfig(filename='app.log', encoding='utf-8', level=logging.DEBUG)
 
-# def get_if_opt_out(phone_number):
-#     with open('opt_out.csv', newline='') as csvfile:
-#         opt_outreader = csv.reader(csvfile, delimiter=',', quotechar='"')
-#         for row in opt_outreader:
-#            if row[0] == phone_number and row[1] == "TRUE":
-#                return True
-#            else:
-#                return False
-# def set_opt_in(phone_number):
-#     if not get_if_out(phone_number):
-#         row_to_make = '"{}", "TRUE", "10", "2023-01-01 01:01:01.000", "2023-12-31 01:01:01.000"'
-
-#         with open('opt_out.csv', 'w', newline='') as csvfile:
-#             opt_outwriter = csv.writer(csvfile, delimiter=',',
-#                             quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#             opt_out.writerow()
-
-
-#def initialize_users()'"+13316255728", "TRUE", "10", "2023-01-01 01:01:01.000", "2023-12-31 01:01:01.000'
-#'"+13316255728", "TRUE", "10", "2023-01-01 01:01:01.000", "2023-12-31 01:01:01.000"''"+13316255728", "TRUE", "10", "2023-01-01 01:01:01.000", "2023-12-31 01:01:01.000"'
 
 def split_string(input_string, max_length=320):
     strings_list = []
@@ -58,12 +48,12 @@ def send_to_queue(inbound_request_payload):
     connection.close()
 
 @app.route("/sms", methods=["POST"])
-def chatgpt():
+def main():
     """get incoming message"""
     inb_msg           = request.form["Body"]  # .lower()
     to_phone_number   = request.form["To"]
     from_phone_number = request.form["From"]
-    opt_out_filename = "opt_out_phonenumbers.json"
+    incoming_filename = "incoming_phonenumbers.json"
 
     inbound_request = {}
     inbound_request["inb_msg"] = inb_msg
@@ -72,22 +62,18 @@ def chatgpt():
     
     inbound_request_payload = str(json.dumps(inbound_request))
 
-
-    with PersistentDict('opt_out.json', 'c', format='json') as opt_in:
-        #with open(opt_out_filename) as json_file:
-        #    opt_in = json.load(json_file)
- 
-
-        if opt_in.get(from_phone_number): 
-            send_to_queue(inbound_request_payload)
-        else:
-            opt_in[from_phone_number] = True
+    send_to_queue(inbound_request_payload)
     
-        if "STOP" in inb_msg:
-            opt_in[from_phone_number] = False
+    with PersistentDict(incoming_filename, 'c', format='json') as prev_req:
 
-    #with open('opt_out_data.json', 'w') as outfile:
-    #    json.dump(user, outfile)
+        if prev_req.get(from_phone_number): 
+            previous_data = prev_req[from_phone_number]
+            prev_req[from_phone_number] = previous_data.append(inbound_request)
+        else:
+            #client.messages.create(from_=to_phone_number,
+            #                       to=from_phone_number,
+            #                       body='Welcome to saturday!')
+            prev_req[from_phone_number] = [inbound_request]
 
     logging.info("Inb_msg {}".format(inb_msg))
     logging.info("Req To phone number {}".format(to_phone_number))
