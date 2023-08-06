@@ -27,8 +27,8 @@ def main():
             result = agent_chain.run(input=body)
         except ValueError:
             result = 'Sorry an error has occured please try again'
-
-        client.messages.create(from_=from_, to=to, body=result)
+            
+        client.messages.create(from_=from_, to=to, body=result[:1500])
 
     def callback(ch, method, properties, body):
         inbound_payload = json.loads(body)
