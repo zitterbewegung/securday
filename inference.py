@@ -60,6 +60,7 @@ def subset_shodan(addr: str):
     IP: {}
     Organization: {}
     Operating System: {}
+    Country: {}
     Location: Lat {} Long {}
     Asn: {}
     Transport: {}
@@ -67,6 +68,7 @@ def subset_shodan(addr: str):
     """.format(host['ip_str'],
                host.get('org', 'n/a'),
                host.get('os', 'n/a'),
+               host.get('country_name', 'n/a'),
                host.get('lat', 'n/a'),
                host.get('long', 'n/a'),
                host.get('asn', 'n/a'),
@@ -130,10 +132,14 @@ def _handle_error(error) -> str:
 agent_chain = initialize_agent(
     tools,
     llm=llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    #agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    agent=AgentType.OPENAI_FUNCTIONS,
     verbose=True,
+    max_iterations=30,
+    #early_stopping_method="generate",
     memory=memory,
     handle_parsing_errors=True,
+
 )
 
 # SMS messaging tools and endpoint
