@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Any, LiteralString
 from collections import deque
 from persistent_dictionary import PersistentDict 
 from flask import Flask, request
+from waitress import serve
 import pika
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.rest import Client
@@ -85,4 +86,5 @@ def main():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    #app.run(debug=True)
+    serve(app, host='0.0.0.0', port=5000)
