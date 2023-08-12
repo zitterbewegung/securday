@@ -85,9 +85,24 @@ def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
     return host.get("port", "n/a")
 
+def phone_info(phone_number: str) -> str:
+    import http.client
+
+    conn = http.client.HTTPSConnection("api.trestleiq.com")
+    
+    conn.request("GET", "/3.0/phone_intel?api_key=SOME_STRING_VALUE&phone={}&phone.country_hint=US".format(phone_number))
+
+    res = conn.getresponse()
+    data = res.read()
+
+    phone_intel_result_payload = data.decode("utf-8")
+
+    
+    return result_payload
+
 tools = [
     Tool(
-       name="hostname",
+        name="trestle",
         func=hostname,
         description="useful when you need lookup a hostname given an ip address.",
     ),
