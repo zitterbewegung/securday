@@ -25,7 +25,7 @@ from langchain.utilities import (
     BashProcess,
     TextRequestsWrapper,
 )
-#from langchain.tools import ShellTool
+from langchain.llms import HuggingFaceHub
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -158,6 +158,27 @@ def _handle_error(error) -> str:
 agent_chain = initialize_agent(
     tools,
     llm=llm,
+    agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    #agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    #agent = AgentType.OPENAI_FUNCTIONS,
+    verbose=True,
+    #max_iterations=30,
+    #early_stopping_method="generate",
+    memory=memory,
+    handle_parsing_errors=True,
+    max_tokens=4000
+
+)
+llama_feature = False
+if llama_feature:
+    repo_id = "meta-llama/Llama-2-13b-chat-hf"
+    llama2_llm =  HuggingFaceHub(
+        repo_id=repo_id, model_kwargs={"max_length": 4000, "temperature": 0.0}
+    )
+
+    llama2_agent_chain = initialize_agent(
+    tools,
+    llm=llama2_llm,
     agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     #agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     #agent = AgentType.OPENAI_FUNCTIONS,
