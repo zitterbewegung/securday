@@ -7,7 +7,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain import Wikipedia, OpenAI 
 from langchain.llms import PromptLayerOpenAI
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
-from langchain.agents import Tool, AgentType
+from langchain.agents import Tool, AgentType, tool
 from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
@@ -34,13 +34,19 @@ python_repl = PythonREPLTool()
 bash = BashProcess()
 requests = TextRequestsWrapper()
 
+def hostname(hostname: str) -> str:
+    """useful when you need to get the ipaddress associated with a hostname"""
+    try:
+       ip = ipaddress.ip_address(addr)
+       return ip
+    except ValueError:
+       return 'Invalid ip address'
+    
+    
+
 def subset_shodan(addr: str):
 
-    #try:
-    #   ip = ipaddress.ip_address(addr)
-    #except ValueError:
-    #   return 'Invalid ip address'
-    
+
     #ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
     #extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
     shodan_api = Shodan(os.environ.get('SHODAN_API_KEY'))
@@ -60,6 +66,7 @@ def subset_shodan(addr: str):
     IP: {}
     Organization: {}
     Operating System: {}
+    Country: {}
     Location: Lat {} Long {}
     Asn: {}
     Transport: {}
@@ -67,6 +74,7 @@ def subset_shodan(addr: str):
     """.format(host['ip_str'],
                host.get('org', 'n/a'),
                host.get('os', 'n/a'),
+               host.get('country_name', 'n/a'),
                host.get('lat', 'n/a'),
                host.get('long', 'n/a'),
                host.get('asn', 'n/a'),
@@ -77,11 +85,31 @@ def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
     return host.get("port", "n/a")
 
+def phone_info(phone_number: str) -> str:
+    import http.client
+
+    conn = http.client.HTTPSConnection("api.trestleiq.com")
+    
+    conn.request("GET", "/3.0/phone_intel?api_key=SOME_STRING_VALUE&phone={}&phone.country_hint=US".format(phone_number))
+
+    res = conn.getresponse()
+    data = res.read()
+
+    phone_intel_result_payload = data.decode("utf-8")
+
+    
+    return result_payload
+
 tools = [
+    Tool(
+        name="trestle",
+        func=hostname,
+        description="useful when you need lookup a hostname given an ip address.",
+    ),
     Tool(
        name="shodan",
         func=subset_shodan,
-        description="useful when you need to figure out information about a hostname or ip address.",
+        description="useful when you need to figure out information about ip address.",
     ),
     Tool(
         name="wolfram",
@@ -91,12 +119,12 @@ tools = [
     Tool(
         name="python_repl",
         func=python_repl.run,
-        description="use this when asked about writing code or if py in is the request.",
+        description="use this when asked about writing code.",
     ),
     Tool(
         name="Bash",
         func=bash.run,
-        description="use this to execute shell commands or git commits",
+        description="use this to execute shell commands or to find out ip addresses from hostnames",
     ),
 ]
 
@@ -117,7 +145,7 @@ memory = ConversationBufferMemory(
     memory_key="chat_history", chat_memory=message_history
 )
 
-llm = ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613")
+llm = ChatOpenAI(temperature=0, model="gpt-4")
 
 def _handle_error(error) -> str:
     return str(error)[:50]
@@ -130,10 +158,16 @@ def _handle_error(error) -> str:
 agent_chain = initialize_agent(
     tools,
     llm=llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    #agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    #agent = AgentType.OPENAI_FUNCTIONS,
     verbose=True,
+    #max_iterations=30,
+    #early_stopping_method="generate",
     memory=memory,
     handle_parsing_errors=True,
+    max_tokens=4000
+
 )
 
 # SMS messaging tools and endpoint
@@ -149,4 +183,3 @@ def query_agent(query_str: str):
             raise e
         response = response.removeprefix("Could not parse LLM output: `").removesuffix("`")
     return str(response)
-
