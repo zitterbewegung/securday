@@ -10,6 +10,7 @@ from duckduckgo_search import DDGS
 
 # pylint: disable=broad-exception-caught, exec-used, unspecified-encoding
 
+
 class Commands:
     """
     A collection of static methods that can execute different commands.
@@ -25,7 +26,7 @@ class Commands:
             arg (str): The argument to be passed to the command.
 
         Returns:
-            str: The result of the command execution, or an error 
+            str: The result of the command execution, or an error
                  message if an exception is raised during execution.
         """
         try:

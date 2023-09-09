@@ -18,6 +18,8 @@ from langchain.experimental.plan_and_execute import (
     load_agent_executor,
     load_chat_planner,
 )
+
+# from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -35,8 +37,7 @@ from langchain.llms import LlamaCpp
 from langchain import PromptTemplate, LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-# from local_inference import local_llm
-# from langchain.tools import ShellTool
+from langchain.tools import ShellTool
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -181,6 +182,7 @@ agent_chain = initialize_agent(
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     # agent = AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     # agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    #agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     # agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     # agent = AgentType.OPENAI_FUNCTIONS,
     verbose=True,
