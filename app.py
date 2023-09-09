@@ -92,8 +92,5 @@ def main():
 
 if __name__ == "__main__":
     serve(app, port=5000)
-<<<<<<< HEAD
-    logging.info("Api started")
-    #app.run(debug=True)
-=======
->>>>>>> 7c1b717a7c4956856b3f1b7092efc547084d150e
+    logging.info("App started")
+    print("App Started")

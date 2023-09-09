@@ -13,7 +13,7 @@ from langchain.agents import Tool, AgentType, tool
 from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
-from langchain.experimental.plan_and_execute import (
+from langchain_experimental.plan_and_execute import (
     PlanAndExecute,
     load_agent_executor,
     load_chat_planner,
@@ -45,6 +45,7 @@ wikipedia = WikipediaAPIWrapper()
 python_repl = PythonREPLTool()
 bash = BashProcess()
 requests = TextRequestsWrapper()
+shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 
 
 def hostname(hostname: str) -> str:
@@ -59,8 +60,6 @@ def hostname(hostname: str) -> str:
 def subset_shodan(addr: str):
     # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
     # extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
-    shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
-
     # if ipaddress.ip_address(extracted_ip).is_private:
     #    return "This is a private ip address."
     addr = addr.replace("scan ", "")
