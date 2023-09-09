@@ -11,10 +11,17 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
 
 ### Dependencies
 
-* Python 3.10
-* A twilio acccount
-* An OpenAI account
-* ngrok / static IP address
+* Python 3.10 / 3.11
+** Software
+** Redis
+** Rabbitmq
+
+** Online Services
+** A twilio acccount
+** An OpenAI account
+** A shodan API Key
+** A wolfram alpha API key
+** ngrok / static IP address
 
 ### Installing
 
