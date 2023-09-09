@@ -4,7 +4,7 @@ from twilio.rest import Client
 from langchain import OpenAI, LLMChain, PromptTemplate
 from promptwatch import PromptWatch
 from dotenv import load_dotenv
-from inference import agent_chain
+from inference import agent_chain#, local_agent_chain
 
 load_dotenv()
 
@@ -38,3 +38,7 @@ tests = [
 for test in tests:
     with PromptWatch(api_key=PROMPT_WATCH_API_KEY) as pw:
         agent_chain(test)
+
+#for test in tests:
+#    with PromptWatch(api_key=PROMPT_WATCH_API_KEY) as pw:
+#        local_agent_chain(test)

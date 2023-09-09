@@ -170,10 +170,10 @@ def _handle_error(error) -> str:
     return str(error)[:50]
 
 
-#model = ChatOpenAI(temperature=0)
-#planner = load_chat_planner(model)
-#executor = load_agent_executor(model, tools, verbose=True)
-#agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
+# model = ChatOpenAI(temperature=0)
+# planner = load_chat_planner(model)
+# executor = load_agent_executor(model, tools, verbose=True)
+# agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
     tools,
@@ -181,7 +181,7 @@ agent_chain = initialize_agent(
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     # agent = AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     # agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    #agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    # agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     # agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     # agent = AgentType.OPENAI_FUNCTIONS,
     verbose=True,
