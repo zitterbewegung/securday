@@ -159,21 +159,17 @@ optimum @ git+https://github.com/huggingface/optimum.git@b7a11b93492e48316399121
 packaging==23.1
 pandas==2.1.0
 paramiko==3.2.0
-=======
 oauthlib==3.2.2
-openai==0.27.6
-openapi-schema-pydantic==1.2.4
 opt-einsum==3.3.0
 overrides==7.4.0
 packaging==23.1
-pandocfilters==1.5.0
+apandocfilters==1.5.0
 paramiko==3.3.1
->>>>>>> ec60b067064fd6ba9e4ac377ddbbbbc6062a1ed9
 parso==0.8.3
 pathspec==0.11.1
 peft==0.5.0
 pexpect==4.8.0
-pickleshare==0.7.5
+pickleshare=0.7.5
 pika==1.3.2
 Pillow==9.5.0
 platformdirs==3.8.1
@@ -214,7 +210,6 @@ pytz-deprecation-shim==0.1.0.post0
 PyYAML==6.0
 pyzmq==25.1.1
 redis==4.6.0
->>>>>>> ec60b067064fd6ba9e4ac377ddbbbbc6062a1ed9
 referencing==0.30.2
 regex==2023.6.3
 requests==2.31.0
