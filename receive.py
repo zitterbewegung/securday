@@ -27,7 +27,7 @@ def main():
             result = agent_chain.run(input=body)
         except ValueError:
             result = 'Sorry an error has occured please try again'
-
+        logging.info(" [x] Sent %r" % body)
         client.messages.create(from_=from_, to=to, body=result)
 
     def callback(ch, method, properties, body):

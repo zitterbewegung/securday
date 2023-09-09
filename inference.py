@@ -1,17 +1,23 @@
 import ipaddress, os, re, socket
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
-# import pwnlib
+
+import pwnlib
 from langchain.chat_models import ChatOpenAI
-#import cve_searchsploit as CS
-from langchain import Wikipedia, OpenAI 
+
+# import cve_searchsploit as CS
+from langchain import Wikipedia, OpenAI
 from langchain.llms import PromptLayerOpenAI
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
 from langchain.agents import Tool, AgentType, tool
 from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
 from langchain import PromptTemplate, LLMChain
-#from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
+from langchain.experimental.plan_and_execute import (
+    PlanAndExecute,
+    load_agent_executor,
+    load_chat_planner,
+)
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -25,7 +31,12 @@ from langchain.utilities import (
     BashProcess,
     TextRequestsWrapper,
 )
-#from langchain.tools import ShellTool
+from langchain.llms import LlamaCpp
+from langchain import PromptTemplate, LLMChain
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+# from local_inference import local_llm
+# from langchain.tools import ShellTool
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -34,33 +45,31 @@ python_repl = PythonREPLTool()
 bash = BashProcess()
 requests = TextRequestsWrapper()
 
+
 def hostname(hostname: str) -> str:
     """useful when you need to get the ipaddress associated with a hostname"""
     try:
-       ip = ipaddress.ip_address(addr)
-       return ip
+        ip = ipaddress.ip_address(addr)
+        return ip
     except ValueError:
-       return 'Invalid ip address'
-    
-    
+        return "Invalid ip address"
+
 
 def subset_shodan(addr: str):
+    # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+    # extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
+    shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 
-
-    #ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
-    #extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
-    shodan_api = Shodan(os.environ.get('SHODAN_API_KEY'))
-    
-    #if ipaddress.ip_address(extracted_ip).is_private:
+    # if ipaddress.ip_address(extracted_ip).is_private:
     #    return "This is a private ip address."
     addr = addr.replace("scan ", "")
     try:
         host = shodan_api.host(addr)
     except Exception as e:
-      return "Shodan has no info"
+        return "Shodan has no info"
     ports = ""
-    for i in host['data']:
-        ports += "Port {} \n".format(i['port'])
+    for i in host["data"]:
+        ports += "Port {} \n".format(i["port"])
 
     return """
     IP: {}
@@ -71,34 +80,43 @@ def subset_shodan(addr: str):
     Asn: {}
     Transport: {}
     Port: {}
-    """.format(host['ip_str'],
-               host.get('org', 'n/a'),
-               host.get('os', 'n/a'),
-               host.get('country_name', 'n/a'),
-               host.get('lat', 'n/a'),
-               host.get('long', 'n/a'),
-               host.get('asn', 'n/a'),
-               host.get('transport', 'n/a'),
-               ports,)
+    """.format(
+        host["ip_str"],
+        host.get("org", "n/a"),
+        host.get("os", "n/a"),
+        host.get("country_name", "n/a"),
+        host.get("lat", "n/a"),
+        host.get("long", "n/a"),
+        host.get("asn", "n/a"),
+        host.get("transport", "n/a"),
+        ports,
+    )
+
 
 def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
     return host.get("port", "n/a")
 
+
 def phone_info(phone_number: str) -> str:
     import http.client
 
     conn = http.client.HTTPSConnection("api.trestleiq.com")
-    
-    conn.request("GET", "/3.0/phone_intel?api_key=SOME_STRING_VALUE&phone={}&phone.country_hint=US".format(phone_number))
+
+    conn.request(
+        "GET",
+        "/3.0/phone_intel?api_key=SOME_STRING_VALUE&phone={}&phone.country_hint=US".format(
+            phone_number
+        ),
+    )
 
     res = conn.getresponse()
     data = res.read()
 
     phone_intel_result_payload = data.decode("utf-8")
 
-    
     return result_payload
+
 
 tools = [
     Tool(
@@ -107,7 +125,7 @@ tools = [
         description="useful when you need lookup a hostname given an ip address.",
     ),
     Tool(
-       name="shodan",
+        name="shodan",
         func=subset_shodan,
         description="useful when you need to figure out information about ip address.",
     ),
@@ -147,28 +165,46 @@ memory = ConversationBufferMemory(
 
 llm = ChatOpenAI(temperature=0, model="gpt-4")
 
+
 def _handle_error(error) -> str:
     return str(error)[:50]
-    
-#model    = ChatOpenAI(temperature=0)
-#planner  = load_chat_planner(model)
+
+
+#model = ChatOpenAI(temperature=0)
+#planner = load_chat_planner(model)
 #executor = load_agent_executor(model, tools, verbose=True)
 #agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
     tools,
     llm=llm,
-    agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    #agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-    #agent = AgentType.OPENAI_FUNCTIONS,
+    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    # agent = AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    # agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    # agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    # agent = AgentType.OPENAI_FUNCTIONS,
     verbose=True,
-    #max_iterations=30,
-    #early_stopping_method="generate",
+    # max_iterations=30,
+    # early_stopping_method="generate",
     memory=memory,
     handle_parsing_errors=True,
-    max_tokens=4000
-
+    max_tokens=4000,
 )
+
+# local_agent_chain = initialize_agent(
+#     tools,
+#     llm=local_llm,
+#     agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+#     #agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+#     #agent = AgentType.OPENAI_FUNCTIONS,
+#     verbose=True,
+#     #max_iterations=30,
+#     #early_stopping_method="generate",
+#     memory=memory,
+#     handle_parsing_errors=True,
+#     max_tokens=4000
+
+# )
 
 # SMS messaging tools and endpoint
 
@@ -176,10 +212,12 @@ agent_chain = initialize_agent(
 def query_agent(query_str: str):
     try:
         response = agent_chain.run(input=query_str)
-        
+
     except ValueError as e:
         response = str(e)
         if not response.startswith("Could not parse LLM output: `"):
             raise e
-        response = response.removeprefix("Could not parse LLM output: `").removesuffix("`")
+        response = response.removeprefix("Could not parse LLM output: `").removesuffix(
+            "`"
+        )
     return str(response)
