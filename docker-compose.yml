@@ -10,14 +10,25 @@ services:
       - '5432:5432'
     volumes: 
       - db:/var/lib/postgresql/data
+  cache:
+   image: redis:latest
+   command: redis-server
+   volumes:
+     - redis:/var/lib/redis
+     - redis-config:/usr/local/etc/redis/redis.conf
+   ports:
+     - 6379:6379
   code:
     build: .
     ports:
       - "8000:5000"
   rabbitmq:
-    image: "rabbitmq:3.9.13-management"
+    image: rabbitmq:3.9.13-management
   metasploit:
-     image: "metasploit-framework:latest"
+     image: metasploit-framework:latest
+  
 volumes:
+  redis:
+  redis-config:
   db:
     driver: local
