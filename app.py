@@ -48,6 +48,10 @@ def send_to_queue(inbound_request_payload):
     logging.info(" [x] Sent {}".format(inbound_request_payload))
     connection.close()
 
+@app.route("/status", methods=["GET"])
+def status():
+    return "App is online"
+    
 @app.route("/sms", methods=["POST"])
 def main():
     """get incoming message"""
@@ -87,4 +91,5 @@ def main():
 
 if __name__ == "__main__":
     serve(app, port=5000)
+    logging.info("Api started")
     #app.run(debug=True)
