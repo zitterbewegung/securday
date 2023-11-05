@@ -37,6 +37,8 @@ from langchain.llms import LlamaCpp
 from langchain import PromptTemplate, LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.tools import ShellTool
+import vt
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -44,6 +46,7 @@ wikipedia = WikipediaAPIWrapper()
 
 requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
+client = vt.Client(os.environ.get("VIRUS_TOTAL"))
 
 
 def hostname(hostname: str) -> str:
@@ -93,6 +96,24 @@ def subset_shodan(addr: str):
 def shell_wrapper(query: str):
     shell_tool.run({"commands": [query]})
     
+@tool("virus", return_direct = True)
+def virus_total_analysis(url):
+	"""Takes a URL and aggregates the result of malware on the site."""
+	url_id = vt.url_id(url)
+	#url_id = vt.url_id("http://www.virustotal.com")
+	analysis = url.to_dict()
+	
+	int(analysis.total_votes['malicious']),
+	analysis.last_analysis_stats["timeout"]
+	return """File fetched from URL is
+	harmess {},
+	malicious {},
+	suspicious {}
+	. """.format(analysis.total_votes['harmless'],
+				 analysis.last_analysis_stats["malicious"],
+				 analysis.last_analysis_stats["suspicious"],)
+				 #analysis.last_analysis_stats["undetected"],)
+                 #analysis.last_analysis_stats["timeout"],)
 
 def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
@@ -119,12 +140,20 @@ def phone_info(phone_number: str) -> str:
     return result_payload
 
 
+
+
+
 tools = [
     Tool(
         name="trestle",
         func=hostname,
         description="useful when you need lookup a hostname given an ip address.",
     ),
+	Tool(
+		name="virus total"
+		func=virus_total,
+		description
+		),
     Tool(
         name="shodan",
         func=subset_shodan,
@@ -148,13 +177,13 @@ tools = [
 ]
 
 
-prefix = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. A user will give information about a hostname or an ip address.  The AI can write code and execute it.  If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+prompt = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. A user will give information about a hostname or an ip address.  The AI can write code and execute it.  If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
 
 
-suffix = (
-    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {input}\n{agent_scratchpad}"
-    ""
-)
+#suffix = (
+#    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {inp#ut}\n{agent_scratchpad}"
+#    ""
+#)
 
 message_history = RedisChatMessageHistory(
     url="redis://localhost:6379/0", ttl=600, session_id="my-session"
@@ -165,7 +194,7 @@ memory = ConversationBufferMemory(
 )
 
 llm = ChatOpenAI(temperature=0, model="gpt-4")
-
+chain = SmartLLMChain(llm=llm, prompt=prompt, n_ideas=3, verbose=True)
 
 def _handle_error(error) -> str:
     return str(error)[:50]
@@ -177,7 +206,7 @@ def _handle_error(error) -> str:
 # agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
-    tools,
+    [tools, virus ],
     llm=llm,
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
