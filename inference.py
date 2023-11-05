@@ -6,13 +6,14 @@ import pwnlib
 from langchain.chat_models import ChatOpenAI
 
 # import cve_searchsploit as CS
-from langchain import Wikipedia, OpenAI
-from langchain.llms import PromptLayerOpenAI
+from langchain.docstore import Wikipedia
+
+from langchain.llms import OpenAI, PromptLayerOpenAI
 from langchain.memory.chat_message_histories import RedisChatMessageHistory
 from langchain.agents import Tool, AgentType, tool
 from langchain.chains import SimpleSequentialChain
 from langchain.memory import ConversationBufferMemory
-from langchain import PromptTemplate, LLMChain
+from langchain_experimental.smart_llm import SmartLLMChain
 from langchain_experimental.plan_and_execute import (
     PlanAndExecute,
     load_agent_executor,
@@ -34,7 +35,8 @@ from langchain.utilities import (
 )
 from langchain_experimental.tools.python.tool import PythonREPLTool
 from langchain.llms import LlamaCpp
-from langchain import PromptTemplate, LLMChain
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.tools import ShellTool
@@ -43,7 +45,7 @@ import vt
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
-
+python_repl =  PythonREPLTool()
 requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 client = vt.Client(os.environ.get("VIRUS_TOTAL"))
@@ -97,7 +99,7 @@ def shell_wrapper(query: str):
     shell_tool.run({"commands": [query]})
     
 @tool("virus", return_direct = True)
-def virus_total_analysis(url):
+def virus_total(url):
 	"""Takes a URL and aggregates the result of malware on the site."""
 	url_id = vt.url_id(url)
 	#url_id = vt.url_id("http://www.virustotal.com")
@@ -150,10 +152,10 @@ tools = [
         description="useful when you need lookup a hostname given an ip address.",
     ),
 	Tool(
-		name="virus total"
-		func=virus_total,
-		description
-		),
+	    name="virus total",
+	    func=virus_total,
+	    description="used to figure out if a downloaded file has malware or is a virus.",
+	),
     Tool(
         name="shodan",
         func=subset_shodan,
@@ -166,7 +168,7 @@ tools = [
     ),
     Tool(
         name="python_repl",
-        func=PythonREPL().run,
+        func=python_repl,
         description="use this when asked about writing code.",
     ),
     Tool(
@@ -194,7 +196,7 @@ memory = ConversationBufferMemory(
 )
 
 llm = ChatOpenAI(temperature=0, model="gpt-4")
-chain = SmartLLMChain(llm=llm, prompt=prompt, n_ideas=3, verbose=True)
+#chain = SmartLLMChain(llm=llm, prompt=prompt, n_ideas=3, verbose=True)
 
 def _handle_error(error) -> str:
     return str(error)[:50]
@@ -206,7 +208,7 @@ def _handle_error(error) -> str:
 # agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
-    [tools, virus ],
+    tools,
     llm=llm,
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
