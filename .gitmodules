@@ -1,0 +1,3 @@
+[submodule "opencve-docker"]
+	path = opencve-docker
+	url = https://github.com/opencve/opencve-docker.git

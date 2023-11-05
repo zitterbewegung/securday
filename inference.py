@@ -25,25 +25,23 @@ from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.agents import Tool, AgentExecutor
-from langchain.tools.python.tool import PythonREPLTool
+from langchain_experimental.utilities import PythonREPL
+from langchain.tools import ShellTool
 from langchain.tools.ifttt import IFTTTWebhook
 from langchain.utilities import (
     WikipediaAPIWrapper,
-    PythonREPL,
-    BashProcess,
     TextRequestsWrapper,
 )
+from langchain_experimental.tools.python.tool import PythonREPLTool
 from langchain.llms import LlamaCpp
 from langchain import PromptTemplate, LLMChain
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.tools import ShellTool
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
 wikipedia = WikipediaAPIWrapper()
-python_repl = PythonREPLTool()
-bash = BashProcess()
+
 requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 
@@ -92,6 +90,9 @@ def subset_shodan(addr: str):
         ports,
     )
 
+def shell_wrapper(query: str):
+    shell_tool.run({"commands": [query]})
+    
 
 def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
@@ -136,12 +137,12 @@ tools = [
     ),
     Tool(
         name="python_repl",
-        func=python_repl.run,
+        func=PythonREPL().run,
         description="use this when asked about writing code.",
     ),
     Tool(
-        name="Bash",
-        func=bash.run,
+        name="ShellTool",
+        func=shell_wrapper,
         description="use this to execute shell commands or to find out ip addresses from hostnames",
     ),
 ]
@@ -179,17 +180,12 @@ agent_chain = initialize_agent(
     tools,
     llm=llm,
     agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    # agent = AgentType.CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    # agent = AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    # agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    # agent  = AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-    # agent = AgentType.OPENAI_FUNCTIONS,
     verbose=True,
     # max_iterations=30,
     # early_stopping_method="generate",
     memory=memory,
     handle_parsing_errors=True,
-    max_tokens=4000,
+    max_tokens=30000, #Giving a maximum of 2768 for queries by the agent. 
 )
 
 # local_agent_chain = initialize_agent(
