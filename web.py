@@ -1,12 +1,12 @@
 import streamlit as st
 from inference import agent_chain
 
-st.header("Tagline Generation App")
-st.text("(Powered by GPT-3 Model)")
-
-
+st.header("Saturday: A natural language network scanner.")
+gh_url = 'https://github.com/zitterbewegung/saturday'
+st.text("(Powered by langchain, shodan and Python!)")
+st.write("the code is at [link](%s)" % gh_url)
 prompt = st.text_area("Enter your prompt", "", height=5)
-trigger = st.button("Generate")
+trigger = st.button("Scan")
 st.subheader("Result")
 
 if trigger:
