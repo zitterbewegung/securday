@@ -27,7 +27,6 @@ from langchain.agents.react.base import DocstoreExplorer
 from langchain.agents.agent_toolkits.openapi.spec import reduce_openapi_spec
 from langchain.agents import Tool, AgentExecutor
 from langchain_experimental.utilities import PythonREPL
-from langchain.tools import ShellTool
 from langchain.tools.ifttt import IFTTTWebhook
 from langchain.utilities import (
     WikipediaAPIWrapper,
@@ -49,7 +48,7 @@ python_repl =  PythonREPLTool()
 requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 virus_total_client = vt.Client(os.environ.get("VIRUS_TOTAL"))
-
+shell_tool = ShellTool()
 
 def hostname(hostname: str) -> str:
     """useful when you need to get the ipaddress associated with a hostname"""
@@ -96,7 +95,7 @@ def subset_shodan(addr: str):
     )
 
 def shell_wrapper(query: str):
-    shell_tool.run({"commands": [query]})
+    return shell_tool.run({"commands": [query]})
     
 def virus_total(url: str):
 	"""Takes a URL and aggregates the result of malware on the site."""
