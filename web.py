@@ -1,14 +1,15 @@
 import streamlit as st
 from inference import agent_chain
 
-st.header("Saturday: A natural language network scanner.")
+st.header("Securday: Natural Language Network Scanner")
 gh_url = 'https://github.com/zitterbewegung/saturday'
 st.text("(Powered by langchain, shodan and Python!)")
+st.text("Text me at +1 (825) 251-9142")
 st.write("the code is at [link](%s)" % gh_url)
-st.header("Securday: Natural Language Network Scanner")
 st.text("(Powered by GPT-3 Model)")
-st.text("Try: Does defcon.org use HTTP/2?")
-st.text("Or what ports are open on 1.1.1.1?")
+st.text("Things to try: Does defcon.org use HTTP/2?")
+st.text("Welche Ports sind unter 1.1.1.1 geöffnet?")
+st.text("Is https://secure.eicar.org/eicar.com malware?")
 
 prompt = st.text_area("Enter your prompt", "", height=5)
 trigger = st.button("Scan")
