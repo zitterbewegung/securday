@@ -19,7 +19,8 @@ from langchain_experimental.plan_and_execute import (
     load_agent_executor,
     load_chat_planner,
 )
-
+from langchain.globals import set_llm_cache
+from langchain.cache import InMemoryCache
 # from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
@@ -39,6 +40,7 @@ from langchain.prompts import PromptTemplate
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.tools import ShellTool
+from censys.search import CensysHosts
 import vt
 
 memory = ConversationBufferMemory()
@@ -49,6 +51,8 @@ requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 virus_total_client = vt.Client(os.environ.get("VIRUS_TOTAL"))
 shell_tool = ShellTool()
+censys_hosts = CensysHosts()
+set_llm_cache(InMemoryCache())
 
 def hostname(hostname: str) -> str:
     """useful when you need to get the ipaddress associated with a hostname"""
@@ -94,23 +98,31 @@ def subset_shodan(addr: str):
         ports,
     )
 
+
+
+def censys_find_location(addr: str):
+    host_query = censys_hosts.view(addr)
+    location_dictionary = host_query.get('location')
+    
+    return location_dictionary
+
 def shell_wrapper(query: str):
     return shell_tool.run({"commands": [query]})
     
-def virus_total(url: str):
-	"""Takes a URL and aggregates the result of malware on the site."""
-	url_id = vt.url_id(url)
-	url = virus_total_client.get_object("/urls/{}", url_id)
-
-	analysis = url.last_analysis_stats
-	
-	return """File fetched from URL is
-	harmess {},
-	malicious {},
-	suspicious {}
-	. """.format(analysis.get('harmless'),
-				 analysis.get("malicious"),
-				 analysis.get("suspicious"),)
+def virus_total(url):
+    """Takes a URL and aggregates the result of malware on the site."""
+    url_id = vt.url_id(url)
+    url = virus_total_client.get_object("/urls/{}", url_id)
+    
+    analysis = url.last_analysis_stats
+    
+    return """File fetched from URL is
+    harmess {},
+    malicious {},
+    suspicious {}
+    . """.format(analysis.get('harmless'),
+		 analysis.get("malicious"),
+		 analysis.get("suspicious"),)
 
 def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
@@ -137,20 +149,22 @@ def phone_info(phone_number: str) -> str:
     return result_payload
 
 
-
-
-
 tools = [
     Tool(
         name="trestle",
         func=hostname,
         description="useful when you need lookup a hostname given an ip address.",
     ),
-	Tool(
+    Tool(
 	    name="virus_total",
 	    func=virus_total,
-	    description="used to figure out if a downloaded file has malware or is a virus.",
+	    description="use to figure out if a url is malware.",
 	),
+    Tool(
+    	    name="censys",
+    	    func=censys_find_location,
+    	    description="use to find the location of a ip address",
+    	),
     Tool(
         name="shodan",
         func=subset_shodan,
@@ -190,7 +204,7 @@ memory = ConversationBufferMemory(
     memory_key="chat_history", chat_memory=message_history
 )
 
-llm = ChatOpenAI(temperature=0, model="gpt-4")
+llm = ChatOpenAI(temperature=0, model="gpt-4-1106-preview")
 #chain = SmartLLMChain(llm=llm, prompt=prompt, n_ideas=3, verbose=True)
 
 def _handle_error(error) -> str:
@@ -205,7 +219,7 @@ def _handle_error(error) -> str:
 agent_chain = initialize_agent(
     tools,
     llm=llm,
-    agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
     # max_iterations=30,
     # early_stopping_method="generate",
