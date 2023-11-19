@@ -151,7 +151,7 @@ vonage==3.7.0
 vonage-jwt==1.0.0
 wcwidth==0.2.6
 websocket-client==1.6.1
-Werkzeug==2.3.6
+Werkzeug==3.0.1
 wikipedia==1.4.0
 wolframalpha==5.0.0
 wrapt==1.15.0
