@@ -8,12 +8,14 @@ from inference import query_agent
 from twilio.rest import Client
 
 load_dotenv()
-logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBUG)
+logging.basicConfig(filename="example.log", encoding="utf-8", level=logging.DEBU
+G)
 
 
 def main():
     client = Client()
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host="localho
+st"))
     channel = connection.channel()
 
     channel.queue_declare(queue="task_queue", durable=True)

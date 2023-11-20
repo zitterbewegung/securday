@@ -94,6 +94,7 @@ def main():
 
 
 if __name__ == "__main__":
+
     serve(app, port=5000)
     logging.info("App started")
     print("App Started")

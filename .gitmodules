@@ -1,3 +1,9 @@
+
 [submodule "opencve-docker"]
 	path = opencve-docker
 	url = https://github.com/opencve/opencve-docker.git
+
+[submodule "metasploitable3"]
+	path = metasploitable3
+	url = git@github.com:rapid7/metasploitable3.git
+

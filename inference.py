@@ -1,4 +1,8 @@
-import ipaddress, os, re, socket
+import ipaddress, os, re, socket, json
+import urllib.request
+import urllib.parse
+import json
+from dotenv import load_dotenv
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
 
@@ -21,7 +25,8 @@ from langchain_experimental.plan_and_execute import (
 )
 from langchain.globals import set_llm_cache
 from langchain.cache import InMemoryCache
-# from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
+# from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent
+_executor, load_chat_planner
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -42,6 +47,7 @@ from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.tools import ShellTool
 from censys.search import CensysHosts
 import vt
+load_dotenv()
 
 memory = ConversationBufferMemory()
 wolfram = WolframAlphaAPIWrapper()
@@ -54,6 +60,7 @@ shell_tool = ShellTool()
 censys_hosts = CensysHosts()
 set_llm_cache(InMemoryCache())
 
+
 def hostname(hostname: str) -> str:
     """useful when you need to get the ipaddress associated with a hostname"""
     try:
@@ -64,7 +71,9 @@ def hostname(hostname: str) -> str:
 
 
 def subset_shodan(addr: str):
-    # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+    # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0
+-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(
+?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
     # extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
     # if ipaddress.ip_address(extracted_ip).is_private:
     #    return "This is a private ip address."
@@ -129,46 +138,64 @@ def scan_ip_addr(ipaddress):
     return host.get("port", "n/a")
 
 
-def phone_info(phone_number: str) -> str:
-    import http.client
+def phone_info(phonenumber: str) -> dict:
+    key =  'UyxAuz0QBfGhzm69yhOhQEhpp7cSZ42j'
+    countries = {'US', 'CA'};
 
-    conn = http.client.HTTPSConnection("api.trestleiq.com")
+    #custom feilds
+    additional_params = {
+        'country' : countries
+    }
+    url = 'https://www.ipqualityscore.com/api/json/phone/%s/%s' %(key, phonenumb
+er)
+    x = requests.get(url, params = additional_params)
+    return (json.loads(x.text))
 
-    conn.request(
-        "GET",
-        "/3.0/phone_intel?api_key=SOME_STRING_VALUE&phone={}&phone.country_hint=US".format(
-            phone_number
-        ),
-    )
+def phone_info(phonenumber: str) -> dict:
+    key = 'UyxAuz0QBfGhzm69yhOhQEhpp7cSZ42j'
+    countries = {'US', 'CA'}
 
-    res = conn.getresponse()
-    data = res.read()
+    # Custom fields
+    additional_params = {
+        'country': ','.join(countries)  # Convert set to comma-separated string
+    }
 
-    phone_intel_result_payload = data.decode("utf-8")
+    # Construct the URL
+    base_url = f'https://www.ipqualityscore.com/api/json/phone/{key}/{phonenumbe
+r}'
+    query_string = urllib.parse.urlencode(additional_params)
+    url = f'{base_url}?{query_string}'
 
-    return result_payload
+    # Make the request
+    with urllib.request.urlopen(url) as response:
+        # Read and decode the response
+        response_data = response.read().decode('utf-8')
 
+    # Parse and return the JSON response
+    return json.loads(response_data)
 
 tools = [
     Tool(
-        name="trestle",
-        func=hostname,
-        description="useful when you need lookup a hostname given an ip address.",
+        name="ip_quality_score",
+        func=phone_info,
+        description="useful when you need find information about a phone number.
+",
     ),
     Tool(
-	    name="virus_total",
-	    func=virus_total,
-	    description="use to figure out if a url is malware.",
+	name="virus_total",
+	func=virus_total,
+	description="use to figure out if a url is malware.",
 	),
     Tool(
-    	    name="censys",
-    	    func=censys_find_location,
-    	    description="use to find the location of a ip address",
+    	name="censys",
+    	func=censys_find_location,
+    	description="use to find the location of a ip address",
     	),
     Tool(
         name="shodan",
         func=subset_shodan,
-        description="useful when you need to figure out information about ip address.",
+        description="useful when you need to figure out information about ip add
+ress.",
     ),
     Tool(
         name="wolfram",
@@ -183,16 +210,22 @@ tools = [
     Tool(
         name="ShellTool",
         func=shell_wrapper,
-        description="use this to execute shell commands or to find out ip addresses from hostnames",
+        description="use this to execute shell commands or to find out ip addres
+ses from hostnames",
     ),
 ]
 
 
-prompt = """The following is a conversation between a human and an AI. The AI is talkative and provides information about a target system, organization and domain. A user will give information about a hostname or an ip address.  The AI can write code and execute it.  If the AI doesn't know the answer to a question, it truthfully says it does not know. You have access to the following tools: """
+prompt = """The following is a conversation between a human and an AI. The AI is
+ talkative and provides information about a target system, organization and doma
+in. A user will give information about a hostname or an ip address.  The AI can 
+write code and execute it.  If the AI doesn't know the answer to a question, it 
+truthfully says it does not know. You have access to the following tools: """
 
 
 #suffix = (
-#    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {inp#ut}\n{agent_scratchpad}"
+#    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {in
+p#ut}\n{agent_scratchpad}"
 #    ""
 #)
 
@@ -214,7 +247,8 @@ def _handle_error(error) -> str:
 # model = ChatOpenAI(temperature=0)
 # planner = load_chat_planner(model)
 # executor = load_agent_executor(model, tools, verbose=True)
-# agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
+# agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verb
+ose=True)
 
 agent_chain = initialize_agent(
     tools,
@@ -254,7 +288,8 @@ def query_agent(query_str: str):
         response = str(e)
         if not response.startswith("Could not parse LLM output: `"):
             raise e
-        response = response.removeprefix("Could not parse LLM output: `").removesuffix(
+        response = response.removeprefix("Could not parse LLM output: `").remove
+suffix(
             "`"
         )
     return str(response)
