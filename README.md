@@ -12,8 +12,11 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
 ### Dependencies
 
 * Python 3.10 / 3.11
+
 ** Software
+
 ** Redis
+
 ** Rabbitmq
 
 ** Online Services
