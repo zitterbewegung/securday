@@ -17,6 +17,8 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
    - Redis
 
    - Rabbitmq
+ 
+   - Local operation curl ollama.ai/install.sh
 
 -  Services
    - A twilio acccount
