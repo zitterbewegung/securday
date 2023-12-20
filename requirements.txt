@@ -203,7 +203,7 @@ torchvision==0.15.2
 tornado==6.3.3
 tqdm==4.65.0
 traitlets==5.9.0
-transformers==4.33.1
+transformers==4.36.0
 triton==2.0.0
 twilio==8.2.2
 typing-inspect==0.9.0
