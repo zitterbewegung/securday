@@ -64,7 +64,7 @@ command to run if program contains helper info
 
 ## Authors
 
-If you contribute to the project I will buy you gyros either through a gift card or in person depending on where you are.
+If you contribute to the project for your first contribution if you accept I will buy you gyros either through a gift card or in person depending on where you are.
 
 ex. Zitterbewegung
 
