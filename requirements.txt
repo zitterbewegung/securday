@@ -188,7 +188,7 @@ sortedcontainers==2.4.0
 soupsieve==2.4.1
 SQLAlchemy==2.0.23
 stack-data==0.6.2
-streamlit==1.26.0
+streamlit==1.30.0
 stripe==7.5.0
 sympy==1.12
 tenacity==8.2.2
