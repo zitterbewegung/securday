@@ -12,13 +12,13 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
 ### Dependencies
 
 -  Software
-   - Python 3.10 / 3.11
+   - Python 3.10+
 
    - Redis
 
    - Rabbitmq
  
-   - Local operation curl ollama.ai/install.sh
+   #- Local operation curl ollama.ai/install.sh
 
 -  Services
    - A twilio acccount
@@ -27,25 +27,25 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
    - A wolfram alpha API key
    - ngrok / cloudflare / static IP address
 
-### Installing
+### Installing & Execution
 
-* After installing Python create a virtualenv
-* pip install -r requirements.txt
-* Run python app.py for the main app
-* Miniagi change .env.example and put the relevant credentials.
-* Run recieve.py to start a messsage queue for simple tasks
-* Run miniagi/pentest.py for the message queue consumer for pentesting.
-
-### Executing program
-
-* Send your SMS texts to the Twilio Phone Number you have bought.
-* If you are getting a 500 error check issues with the twilio console.
 Create a virtualenv from requirements.py
 ```
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+I use ngrok to make a public ip that can be consumed from twilio
+```
+ngrok http 5000
+```
+
+### Executing program
+
+
+* Send your SMS texts to the Twilio Phone Number you have bought.
+* If you are getting a 500 error check issues with the twilio console.
 
 First start app.py
 ```
@@ -57,10 +57,6 @@ Then start receiver.py (at minium you need one of these).
 ```
 python receiver.py
 
-```
-I use ngrok to make a public ip that can be consumed from twilio
-```
-ngrok http 5000
 ```
 
 
