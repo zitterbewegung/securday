@@ -40,6 +40,12 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
 
 * Send your SMS texts to the Twilio Phone Number you have bought.
 * If you are getting a 500 error check issues with the twilio console.
+Create a virtualenv from requirements.py
+```
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
 First start app.py
 ```
@@ -50,6 +56,11 @@ Then start reciever.py
 Then start receiver.py (at minium you need one of these).
 ```
 python receiver.py
+
+```
+I use ngrok to make a public ip that can be consumed from twilio
+```
+ngrok http 5000
 ```
 
 
