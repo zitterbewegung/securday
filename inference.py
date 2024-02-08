@@ -56,6 +56,7 @@ python_repl =  PythonREPLTool()
 requests = TextRequestsWrapper()
 shodan_api = Shodan(os.environ.get("SHODAN_API_KEY"))
 virus_total_client = vt.Client(os.environ.get("VIRUS_TOTAL"))
+IP_QUALITYSCORE_API_KEY = os.environ.get("IP_QUALITY_SCORE_API_KEY")
 shell_tool = ShellTool()
 censys_hosts = CensysHosts()
 set_llm_cache(InMemoryCache())
@@ -139,7 +140,7 @@ def scan_ip_addr(ipaddress):
 
 
 def phone_info(phonenumber: str) -> dict:
-    key =  'UyxAuz0QBfGhzm69yhOhQEhpp7cSZ42j'
+    key =  IP_QUALITYSCORE_API_KEY
     countries = {'US', 'CA'};
 
     #custom feilds
@@ -152,7 +153,7 @@ er)
     return (json.loads(x.text))
 
 def phone_info(phonenumber: str) -> dict:
-    key = 'UyxAuz0QBfGhzm69yhOhQEhpp7cSZ42j'
+    key = IP_QUALITYSCORE_API_KEY
     countries = {'US', 'CA'}
 
     # Custom fields
