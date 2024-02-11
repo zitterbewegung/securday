@@ -16,7 +16,7 @@ Under the hood it uses langchain (a way to augment LLMs) that currently uses an 
 
    - Redis
 
-   - Rabbitmq
+   - Rabbitmq 
  
    #- Local operation curl ollama.ai/install.sh
 
@@ -40,6 +40,7 @@ I use ngrok to make a public ip that can be consumed from twilio
 ```
 ngrok http 5000
 ```
+Install rabbitmq using the script https://rabbitmq.com/install-debian.html
 
 ### Executing program
 
