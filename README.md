@@ -82,6 +82,8 @@ Special thanks to miniagi working out pentesting.
 
 * 0.1
     * Initial Release
+* 0.2
+    * Added a web interface and added many tools. Reverse phone lookup to get information about a phone number, Virus total to see if a URL has a virus, censys to figure out if a location is an ip address and BashShell has been replaced with the new ShellTool in the latest version of langchain.
 
 ## License
 
