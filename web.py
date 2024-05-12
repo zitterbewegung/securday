@@ -2,7 +2,7 @@ import streamlit as st
 from inference import agent_chain
 
 st.header("Securday: Natural Language Network Scanner")
-gh_url = 'https://github.com/zitterbewegung/saturday'
+gh_url = 'https://github.com/zitterbewegung/securday'
 st.text("(Powered by langchain, shodan and Python!)")
 st.text("Text me at +1 (825) 251-9142")
 st.write("the code is at [link](%s)" % gh_url)
