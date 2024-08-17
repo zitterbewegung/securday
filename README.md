@@ -1,6 +1,6 @@
 # Saturday
 
-An SMS autonomous agent that assists in information security tasks.
+The code for [Securday](https://www.securday.com) autonomous agent that assists in information security tasks.
 
 ## Description
 
