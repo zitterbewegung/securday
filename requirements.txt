@@ -35,7 +35,7 @@ cmake==3.27.2
 colorama==0.4.6
 colored-traceback==0.3.0
 coloredlogs==15.0.1
-cryptography==41.0.1
+cryptography==42.0.2
 cve-searchsploit==1.7
 dataclasses-json==0.5.8
 datasets==2.14.5
