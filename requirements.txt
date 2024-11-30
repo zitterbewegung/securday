@@ -123,7 +123,7 @@ openapi-schema-pydantic==1.2.4
 optimum @ git+https://github.com/huggingface/optimum.git@b7a11b93492e48316399121eafceefa8f754f598
 packaging==23.1
 pandas==2.1.0
-paramiko==3.2.0
+paramiko==3.4.0
 parso==0.8.3
 pathspec==0.11.1
 peft==0.5.0
