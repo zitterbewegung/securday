@@ -144,7 +144,7 @@ ptyprocess==0.7.0
 pure-eval==0.2.2
 pwnlib==1.2.1
 pwntools==4.10.0
-pyarrow==13.0.0
+pyarrow==14.0.1
 pyasn1==0.5.0
 pycparser==2.21
 pydantic==1.10.9
