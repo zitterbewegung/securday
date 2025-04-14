@@ -2,6 +2,7 @@ import ipaddress, os, re, socket, json
 import urllib.request
 import urllib.parse
 import json
+from raglog import RAGLogger
 from dotenv import load_dotenv
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from shodan import Shodan
@@ -25,8 +26,7 @@ from langchain_experimental.plan_and_execute import (
 )
 from langchain.globals import set_llm_cache
 from langchain.cache import InMemoryCache
-# from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent
-_executor, load_chat_planner
+# from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
 from langchain.utilities.wolfram_alpha import WolframAlphaAPIWrapper
 from langchain.agents import load_tools, initialize_agent
 from langchain.agents.react.base import DocstoreExplorer
@@ -71,9 +71,7 @@ def hostname(hostname: str) -> str:
 
 
 def subset_shodan(addr: str):
-    # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0
--5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(
-?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+    # ipv4_extract_pattern = "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
     # extracted_ip = re.findall(ipv4_extract_pattern, addr)[0]
     # if ipaddress.ip_address(extracted_ip).is_private:
     #    return "This is a private ip address."
@@ -120,18 +118,21 @@ def shell_wrapper(query: str):
     
 def virus_total(url):
     """Takes a URL and aggregates the result of malware on the site."""
-    url_id = vt.url_id(url)
-    url = virus_total_client.get_object("/urls/{}", url_id)
-    
-    analysis = url.last_analysis_stats
-    
-    return """File fetched from URL is
-    harmess {},
-    malicious {},
-    suspicious {}
-    . """.format(analysis.get('harmless'),
-		 analysis.get("malicious"),
-		 analysis.get("suspicious"),)
+    try:
+        url_id = vt.url_id(url)
+        url = virus_total_client.get_object("/urls/{}", url_id)
+        
+        analysis = url.last_analysis_stats
+        
+        return """File fetched from URL is
+        harmess {},
+        malicious {},
+        suspicious {}
+        . """.format(analysis.get('harmless'),
+		     analysis.get("malicious"),
+		     analysis.get("suspicious"),)
+    except RuntimeError as e:
+        return """ This URL does not resolve. """
 
 def scan_ip_addr(ipaddress):
     scan = api.scan([ipaddress])
@@ -146,8 +147,7 @@ def phone_info(phonenumber: str) -> dict:
     additional_params = {
         'country' : countries
     }
-    url = 'https://www.ipqualityscore.com/api/json/phone/%s/%s' %(key, phonenumb
-er)
+    url = 'https://www.ipqualityscore.com/api/json/phone/%s/%s' %(key, phonenumber)
     x = requests.get(url, params = additional_params)
     return (json.loads(x.text))
 
@@ -161,8 +161,7 @@ def phone_info(phonenumber: str) -> dict:
     }
 
     # Construct the URL
-    base_url = f'https://www.ipqualityscore.com/api/json/phone/{key}/{phonenumbe
-r}'
+    base_url = f'https://www.ipqualityscore.com/api/json/phone/{key}/{phonenumber}'
     query_string = urllib.parse.urlencode(additional_params)
     url = f'{base_url}?{query_string}'
 
@@ -174,12 +173,21 @@ r}'
     # Parse and return the JSON response
     return json.loads(response_data)
 
+def get_cve(cve_identifier: str):
+    #curl https://cve.circl.lu/api/cve/CVE-2010-3333
+    response = requests.get('https://cve.circl.lu/api/cve/{}'.format(cve_identifier))
+    return response
+
 tools = [
+    Tool(
+        name='cve_circl',
+        func=get_cve,
+        description="useful if you have an query that has with CVE in it.",
+    ),
     Tool(
         name="ip_quality_score",
         func=phone_info,
-        description="useful when you need find information about a phone number.
-",
+        description="useful when you need find information about a phone number.",
     ),
     Tool(
 	name="virus_total",
@@ -187,15 +195,14 @@ tools = [
 	description="use to figure out if a url is malware.",
 	),
     Tool(
-    	name="censys",
+     	name="censys",
     	func=censys_find_location,
     	description="use to find the location of a ip address",
     	),
     Tool(
         name="shodan",
         func=subset_shodan,
-        description="useful when you need to figure out information about ip add
-ress.",
+        description="useful when you need to figure out information about ip address.",
     ),
     Tool(
         name="wolfram",
@@ -210,8 +217,7 @@ ress.",
     Tool(
         name="ShellTool",
         func=shell_wrapper,
-        description="use this to execute shell commands or to find out ip addres
-ses from hostnames",
+        description="use this to execute shell commands or to find out ip addresses from hostnames",
     ),
 ]
 
@@ -224,8 +230,7 @@ truthfully says it does not know. You have access to the following tools: """
 
 
 #suffix = (
-#    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {in
-p#ut}\n{agent_scratchpad}"
+#    "Begin!\n\nPrevious conversation history:\n{chat_history}\n\nNew input: {input}\n{agent_scratchpad}"
 #    ""
 #)
 
@@ -237,8 +242,9 @@ memory = ConversationBufferMemory(
     memory_key="chat_history", chat_memory=message_history
 )
 
-llm = ChatOpenAI(temperature=0, model="gpt-4-1106-preview")
+#llm = ChatOpenAI(temperature=0, model="gpt-4o-2024-11-20")
 #chain = SmartLLMChain(llm=llm, prompt=prompt, n_ideas=3, verbose=True)
+llm = ChatOpenAI(temperature=0, model="gpt-4.1-2025-04-14")
 
 def _handle_error(error) -> str:
     return str(error)[:50]
@@ -247,19 +253,18 @@ def _handle_error(error) -> str:
 # model = ChatOpenAI(temperature=0)
 # planner = load_chat_planner(model)
 # executor = load_agent_executor(model, tools, verbose=True)
-# agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verb
-ose=True)
+# agent = PlanAndExecute(memory=memory, planner=planner, executor=executor, verbose=True)
 
 agent_chain = initialize_agent(
     tools,
     llm=llm,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
-    # max_iterations=30,
-    # early_stopping_method="generate",
+#    # max_iterations=30,
+#    # early_stopping_method="generate",
     memory=memory,
     handle_parsing_errors=True,
-    max_tokens=30000, #Giving a maximum of 2768 for queries by the agent. 
+    max_tokens=700000, #Giving a maximum of 2768 for queries by the agent. 
 )
 
 # local_agent_chain = initialize_agent(
@@ -281,15 +286,19 @@ agent_chain = initialize_agent(
 
 
 def query_agent(query_str: str):
-    try:
-        response = agent_chain.run(input=query_str)
 
+    logger = RAGLogger(log_dir="logs", auto_save=True)
+    try:
+        logger.log_query(query_str)
+        logger.start_step("llm_generation")
+        
+        response = agent_chain.run(input=query_str)
+        logger.log_llm(query_str, response)
+        logger.end_step("llm_generation")
+        
     except ValueError as e:
         response = str(e)
         if not response.startswith("Could not parse LLM output: `"):
             raise e
-        response = response.removeprefix("Could not parse LLM output: `").remove
-suffix(
-            "`"
-        )
+        response = response.removeprefix("Could not parse LLM output: `").removesuffix("`")
     return str(response)
